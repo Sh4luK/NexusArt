@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements
+
 COPY requirements.txt .
 
 # Instalar dependências Python
+RUN pip install --no-cache-dir "setuptools<81"
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
