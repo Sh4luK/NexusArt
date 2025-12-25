@@ -53,13 +53,7 @@ class Generation(Base):
     def __repr__(self):
         return f"<Generation {self.id} ({self.status})>"
 
-    @property
-    def metadata(self):
-        """Compatibility property so Pydantic schemas expecting `metadata` can
-        read the value stored in the `meta` attribute without colliding with
-        SQLAlchemy's class-level `metadata` object.
-        """
-        return self.meta
+    
 
 class Template(Base):
     __tablename__ = "templates"

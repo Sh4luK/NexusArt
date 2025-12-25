@@ -64,7 +64,7 @@ class UserUpdate(BaseModel):
 # Response
 class UserResponse(UserBase):
     id: int
-    cpf_cnpj: str
+    cpf_cnpj: Optional[str] = None
     business_sector: Optional[str]
     plan_type: PlanType
     credits_used: int

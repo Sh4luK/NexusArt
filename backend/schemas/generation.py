@@ -34,7 +34,7 @@ class GenerationResponse(GenerationBase):
     downloads: int
     shares: int
     error_message: Optional[str]
-    metadata: Optional[Dict[str, Any]]
+    meta: Optional[Dict[str, Any]]
     created_at: datetime
     updated_at: Optional[datetime]
     completed_at: Optional[datetime]

@@ -108,18 +108,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('username', email);
-      formData.append('password', password);
-      
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/auth/login`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
+        params.toString()
       );
 
       const { access_token, user: userData } = response.data;
