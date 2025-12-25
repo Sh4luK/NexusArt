@@ -43,7 +43,14 @@ const signupSchema = z.object({
   phone: z.string().min(10, 'Telefone inválido'),
   business_name: z.string().min(2, 'Nome do negócio inválido'),
   business_sector: z.string().min(1, 'Selecione um setor'),
-}).refine((data) => data.password === data.confirm_password, {
+}).refine((data) => {
+  // Only enforce password equality when both fields are present (user reached step 3).
+  // This avoids blocking validation for earlier steps where password fields are empty/undefined.
+  if (typeof data.password === 'undefined' || typeof data.confirm_password === 'undefined') {
+    return true;
+  }
+  return data.password === data.confirm_password;
+}, {
   message: "As senhas não coincidem",
   path: ["confirm_password"],
 });
@@ -62,6 +69,7 @@ const Signup: React.FC = () => {
     formState: { errors },
     watch,
     trigger,
+    setValue,
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -69,10 +77,12 @@ const Signup: React.FC = () => {
     },
   });
 
-  const validateStep = async (stepNumber: number) => {
+  // Validate the current step and advance to the next one when valid
+  const validateAndAdvance = async () => {
     let fields: (keyof SignupFormData)[] = [];
-    
-    switch (stepNumber) {
+
+    // Validate current step's fields (not the next step)
+    switch (step) {
       case 1:
         fields = ['full_name', 'cpf_cnpj', 'email'];
         break;
@@ -82,12 +92,35 @@ const Signup: React.FC = () => {
       case 3:
         fields = ['password', 'confirm_password'];
         break;
+      default:
+        fields = [];
     }
-    
+
+    console.debug('Validating fields for step', step, fields);
+    const toastId = toast.loading('Validando etapa...');
     const result = await trigger(fields);
     if (result) {
-      setStep(stepNumber);
+      toast.dismiss(toastId);
+      toast.success('Próxima etapa');
+      setStep((s) => s + 1);
+    } else {
+      toast.dismiss(toastId);
+      toast.error('Por favor, corrija os campos destacados antes de continuar');
+      console.debug('Validation failed for step', step);
     }
+  };
+
+  const fillTestData = () => {
+    const ts = Date.now();
+    setValue('full_name', 'Teste Automatizado');
+    setValue('cpf_cnpj', '12345678901');
+    setValue('email', `smoke+${ts}@example.com`);
+    setValue('business_name', 'Negócio Teste');
+    setValue('phone', '11999999999');
+    setValue('business_sector', 'restaurant');
+    setValue('password', 'Testpass1!');
+    setValue('confirm_password', 'Testpass1!');
+    toast.success('Formulário preenchido com dados de teste');
   };
 
   const onSubmit = async (data: SignupFormData) => {
@@ -438,6 +471,17 @@ const Signup: React.FC = () => {
           {/* Navigation Buttons */}
           <div className="mt-8 flex justify-between">
             <div>
+              {process.env.NODE_ENV !== 'production' && (
+                <button
+                  type="button"
+                  data-testid="fill-test-data"
+                  onClick={fillTestData}
+                  disabled={isLoading}
+                  className="inline-flex items-center px-3 py-2 mr-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Preencher com dados de teste
+                </button>
+              )}
               {step > 1 && (
                 <button
                   type="button"
@@ -455,7 +499,8 @@ const Signup: React.FC = () => {
               {step < 3 ? (
                 <button
                   type="button"
-                  onClick={() => validateStep(step + 1)}
+                  data-testid="signup-continue"
+                  onClick={validateAndAdvance}
                   disabled={isLoading}
                   className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >

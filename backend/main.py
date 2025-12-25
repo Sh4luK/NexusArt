@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
+from starlette.requests import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -8,18 +10,15 @@ import uvicorn
 
 from core.config import settings
 from core.database import engine, Base, get_db
-from api.routes import auth, whatsapp, generations, subscriptions
+from api.routes import auth, whatsapp, generations, subscriptions, users
 from models.user import User, PlanType
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     print("🚀 Starting NexusArt API...")
     
-    # Criar tabelas do banco de dados
     Base.metadata.create_all(bind=engine)
     
-    # Criar usuário admin de desenvolvimento (apenas em dev)
     if settings.DEBUG:
         db = next(get_db())
         try:
@@ -71,6 +70,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["WhatsApp"])
 app.include_router(generations.router, prefix="/api/generations", tags=["Generations"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["Subscriptions"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
 
 # Servir arquivos estáticos
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -103,12 +103,17 @@ async def health_check(db: Session = Depends(get_db)):
 
 # Error handlers
 @app.exception_handler(404)
-async def not_found_handler(request, exc):
-    return {
-        "error": "Not Found",
-        "message": "The requested resource was not found",
-        "path": request.url.path
-    }
+async def not_found_handler(request: Request, exc):
+    # Return a proper JSONResponse so middleware (CORS, error handlers)
+    # can treat it as a Response object and still apply headers.
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "message": "The requested resource was not found",
+            "path": str(request.url.path),
+        },
+    )
 
 if __name__ == "__main__":
     uvicorn.run(
