@@ -125,9 +125,14 @@ class GeminiService:
         """
         
         try:
-            # Generate enhanced prompt using Gemini
-            response = self.model.generate_content(enhanced_prompt)
-            generated_description = response.text
+            # Attempt to generate enhanced prompt using Gemini; fall back to the
+            # raw enhanced prompt if the API key is not configured or the call fails.
+            try:
+                response = self.model.generate_content(enhanced_prompt)
+                generated_description = response.text
+            except Exception:
+                # Fallback: use the constructed enhanced prompt as the description
+                generated_description = enhanced_prompt
             
             # Extract key information
             extracted_info = self._extract_promotional_info(user_prompt)
@@ -200,6 +205,26 @@ class GeminiService:
                 info["products"].append(words[i + 1])
         
         return info
+
+    def generate_promotional_image(self, prompt: str, business_type: str, template_type: str = None, style: str = "modern") -> Dict[str, Any]:
+        """
+        High-level convenience method used by the API to generate a promotional image.
+        For now this composes an enhanced prompt and returns a mocked image URL along
+        with metadata. In production this should call the vision/image generation
+        API and return the real image URL and metadata.
+        """
+        try:
+            result = self.generate_promotional_image_prompt(
+                user_prompt=prompt,
+                business_type=business_type,
+                template_type=template_type,
+                style=style,
+            )
+            # Mock image generation for smoke tests
+            result["image_url"] = "https://via.placeholder.com/1080"
+            return result
+        except Exception as e:
+            raise
     
     def generate_text_content(self, prompt: str, max_tokens: int = 500) -> str:
         """

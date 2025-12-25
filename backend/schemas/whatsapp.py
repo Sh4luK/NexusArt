@@ -86,3 +86,6 @@ class WhatsAppStats(BaseModel):
     messages_this_month: int
     avg_response_time: float  # in seconds
     most_active_number: Optional[str]
+
+# Backwards-compatible alias expected by some routes
+WhatsAppMessage = WhatsAppMessageResponse

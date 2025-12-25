@@ -32,3 +32,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Import models to ensure SQLAlchemy mappers are registered
+# This makes sure relationships using string class names
+# (e.g. "WhatsAppNumber") can be resolved when mappers
+# are configured during runtime.
+try:
+    from models import user, whatsapp, generation
+except Exception:
+    # Import errors here are non-fatal for environments
+    # where models are imported elsewhere.
+    pass

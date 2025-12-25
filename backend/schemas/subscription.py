@@ -47,7 +47,7 @@ class SubscriptionResponse(BaseModel):
         from_attributes = True
 
 class CreateSubscriptionRequest(BaseModel):
-    plan_id: str = Field(..., regex="^(basic_monthly|professional_monthly|annual_professional)$")
+    plan_id: str = Field(..., pattern="^(basic_monthly|professional_monthly|annual_professional)$")
     billing_cycle: BillingCycle = BillingCycle.MONTHLY
     payment_method_id: Optional[str] = None  # For Stripe
 

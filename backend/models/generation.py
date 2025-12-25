@@ -35,8 +35,9 @@ class Generation(Base):
     shares = Column(Integer, default=0)
     views = Column(Integer, default=0)
     
-    # Metadata
-    metadata = Column(JSON, nullable=True)  # Store additional data like AI parameters
+    # Metadata (attribute named `meta` to avoid collision with SQLAlchemy internals)
+    # Database column is `generation_metadata` in the existing schema, map to that name.
+    meta = Column('generation_metadata', JSON, nullable=True)  # Store additional data like AI parameters
     tags = Column(JSON, nullable=True)  # Array of tags
     
     # Timestamps
@@ -51,6 +52,14 @@ class Generation(Base):
     
     def __repr__(self):
         return f"<Generation {self.id} ({self.status})>"
+
+    @property
+    def metadata(self):
+        """Compatibility property so Pydantic schemas expecting `metadata` can
+        read the value stored in the `meta` attribute without colliding with
+        SQLAlchemy's class-level `metadata` object.
+        """
+        return self.meta
 
 class Template(Base):
     __tablename__ = "templates"

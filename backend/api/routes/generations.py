@@ -65,7 +65,7 @@ async def create_generation(
             template_id=data.template_id,
             style=style,
             credits_used=1,
-            metadata=result
+            meta=result
         )
         
         db.add(generation)

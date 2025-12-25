@@ -3,12 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import uvicorn
 
 from core.config import settings
 from core.database import engine, Base, get_db
 from api.routes import auth, whatsapp, generations, subscriptions
-from models.user import User
+from models.user import User, PlanType
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,7 +32,7 @@ async def lifespan(app: FastAPI):
                     hashed_password=get_password_hash("admin123"),
                     full_name="Admin NexusArt",
                     business_name="NexusArt Dev",
-                    plan_type="professional",
+                    plan_type=PlanType.PROFESSIONAL,
                     credits_limit=9999,
                     is_active=True
                 )
@@ -88,7 +89,7 @@ async def root():
 async def health_check(db: Session = Depends(get_db)):
     try:
         # Testar conexão com banco de dados
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         return {
             "status": "healthy",
             "database": "connected",

@@ -9,7 +9,9 @@ import secrets
 from core.config import settings
 
 # Contexto para hash de senhas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Prefer a pure-Python scheme (`pbkdf2_sha256`) so hashing
+# works even if the native `bcrypt` wheel is unavailable.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 # Scheme para OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
